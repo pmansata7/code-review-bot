@@ -1,6 +1,6 @@
 # PR review procedure
 
-Canonical rubric copy also lives in Project docs (`pr-review-rubric.md`). Follow this skill on every review turn.
+Based on [How I AI — PR risk bot](https://youtu.be/cmATJGbA8bI) (Merge Mommy / risk scoring). Canonical rubric: Project `pr-review-rubric.md`. Follow this skill on every review turn.
 
 ## Preconditions
 

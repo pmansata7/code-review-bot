@@ -44,13 +44,35 @@ curl -s -X POST http://127.0.0.1:3000/code-review-bot/v1/channels/github \
   -d @fixtures/github/pull_request.opened.json
 ```
 
+## Tools
+
+| Tool | Role |
+|------|------|
+| `fetch_pr` | Read workspace PR meta/diff |
+| `run_review` | Output contract reminder |
+| `post_review_decision` | GitHub review (Summary, Blockers, Suggestions, Test gaps, Agentic goals) |
+| `run_test_goal` | Agentic: run shell command for a stated goal |
+| `open_companion_test_pr` | Open companion PR with generated test files |
+
+Subagents: **reviewer**, **test-explorer**.
+
+## Triggers
+
+- **check_suite** success (primary)
+- Comment **`/review`** or **`@code-review-bot review`**
+- Label **`agentic-test`**
+
+## Org rollout
+
+Workflow templates: `.github/workflow-templates/`. Project docs: repo-onboarding, cursor-rules-sync in Context.
+
 ## Customize
 
 | File | Purpose |
 |------|---------|
 | `bot/skills/pr-review.md` | Scoring rubric and bands |
 | `bot/skills/agentic-testing.md` | Goal-based test exploration |
-| `bot/channels/github.ts` | Triggers; set `onPullRequest` to `null` for post-CI only |
+| `bot/channels/github.ts` | Triggers |
 | `bot/instructions.md` | Agent identity and procedure |
 
 ## Credentials

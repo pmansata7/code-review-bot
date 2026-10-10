@@ -18,8 +18,13 @@ Goal-based testing for PRs: agents explore and propose tests; **CI stays determi
 ## What to deliver
 
 - Short **goal list** (numbered) tied to changed paths.
-- Commands you ran and outcomes (pass/fail).
+- Commands you ran via **run_test_goal** and outcomes (pass/fail).
 - Suggested **pinned** eval or test file paths — do not silently skip failures to greenwash CI.
+- When files are ready: **open_companion_test_pr** (companion branch `agentic-tests/<suffix>`); human merges after review.
+
+## CI gates (Meta-style, Phase 2)
+
+Before merging generated tests: compiles, passes **pass^3** on critical cases, coverage increases on touched files. Repair only in companion PRs, never silent skip on main.
 
 ## Non-goals
 

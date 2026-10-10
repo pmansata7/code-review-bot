@@ -27,8 +27,33 @@ export default defineTool({
     autoApproveRecommended: z
       .boolean()
       .describe("True only for low band with no blockers and policy allows bot APPROVE."),
+    suggestions: z
+      .array(z.string().min(1).max(400))
+      .optional()
+      .describe("Non-blocking improvements."),
+    testGaps: z
+      .array(z.string().min(1).max(400))
+      .optional()
+      .describe("Missing or weak test coverage for touched logic."),
+    agenticGoals: z
+      .array(z.string().min(1).max(400))
+      .optional()
+      .describe("Goal statements for agentic testing follow-up."),
   }),
-  async execute({ risk, score, summary, evidence, blockers, autoApproveRecommended }, ctx) {
+  async execute(
+    {
+      risk,
+      score,
+      summary,
+      evidence,
+      blockers,
+      autoApproveRecommended,
+      suggestions,
+      testGaps,
+      agenticGoals,
+    },
+    ctx,
+  ) {
     if (ctx.session.purpose === "eval") {
       return {
         posted: false,
@@ -52,7 +77,17 @@ export default defineTool({
       throw new Error("missing pr/head.sha");
     }
 
-    const body = formatReviewBody({ risk, score, summary, evidence, blockers, autoApproveRecommended });
+    const body = formatReviewBody({
+      risk,
+      score,
+      summary,
+      evidence,
+      blockers,
+      autoApproveRecommended,
+      suggestions,
+      testGaps,
+      agenticGoals,
+    });
     let event: "APPROVE" | "REQUEST_CHANGES" | "COMMENT" = "COMMENT";
     if (blockers.length > 0) {
       event = "REQUEST_CHANGES";
@@ -93,6 +128,9 @@ function formatReviewBody(input: {
   evidence: string[];
   blockers: string[];
   autoApproveRecommended: boolean;
+  suggestions?: string[];
+  testGaps?: string[];
+  agenticGoals?: string[];
 }): string {
   const recommendation =
     input.blockers.length > 0
@@ -115,6 +153,19 @@ function formatReviewBody(input: {
 
   if (input.blockers.length > 0) {
     lines.push("", "### Blockers", ...input.blockers.map((item) => `- ${item}`));
+  }
+  if (input.suggestions && input.suggestions.length > 0) {
+    lines.push("", "### Suggestions", ...input.suggestions.map((item) => `- ${item}`));
+  }
+  if (input.testGaps && input.testGaps.length > 0) {
+    lines.push("", "### Test gaps", ...input.testGaps.map((item) => `- ${item}`));
+  }
+  if (input.agenticGoals && input.agenticGoals.length > 0) {
+    lines.push(
+      "",
+      "### Agentic goals proposed",
+      ...input.agenticGoals.map((item) => `- ${item}`),
+    );
   }
 
   return lines.join("\n");

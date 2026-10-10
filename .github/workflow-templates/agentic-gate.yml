@@ -1,0 +1,34 @@
+# Org template: deterministic CI gate (no model in the loop).
+# Copy to your-org/.github repo as workflow-templates/agentic-gate.yml
+name: Agentic gate
+
+on:
+  workflow_call:
+    inputs:
+      test_command:
+        description: "Command to run tests"
+        required: false
+        type: string
+        default: "npm test"
+      node_version:
+        required: false
+        type: string
+        default: "22"
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+      - run: npm ci
+      - name: Build and test
+        run: ${{ inputs.test_command }}
+      - name: BDK evals (optional)
+        if: ${{ hashFiles('evals/**/*.eval.ts') != '' }}
+        run: npx @cursor/bdk eval --dir . --tags smoke
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}

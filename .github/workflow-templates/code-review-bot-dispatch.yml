@@ -1,0 +1,20 @@
+# Org template: manual dispatch to re-run review tooling in CI (optional).
+# Hosted BDK + cursor-events is preferred for automatic reviews.
+name: Code review bot dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number
+        required: true
+        type: number
+
+jobs:
+  note:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reminder
+        run: |
+          echo "Automatic reviews run via hosted code-review-bot on check_suite success."
+          echo "Replay locally: npx @cursor/bdk github replay ${{ github.repository }}#${{ inputs.pr_number }}"
