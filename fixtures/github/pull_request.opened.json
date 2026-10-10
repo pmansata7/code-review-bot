@@ -1,0 +1,24 @@
+{
+  "action": "opened",
+  "number": 1,
+  "pull_request": {
+    "number": 1,
+    "state": "open",
+    "draft": false,
+    "title": "Docs tweak",
+    "html_url": "https://github.com/your-org/service-a/pull/1",
+    "head": {
+      "ref": "docs/readme",
+      "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "base": { "ref": "main" },
+    "user": { "login": "sam" }
+  },
+  "repository": {
+    "full_name": "your-org/service-a",
+    "html_url": "https://github.com/your-org/service-a",
+    "name": "service-a",
+    "owner": { "login": "your-org" }
+  },
+  "sender": { "login": "sam" }
+}
