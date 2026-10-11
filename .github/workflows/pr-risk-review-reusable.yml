@@ -38,10 +38,11 @@ jobs:
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
-          npx @cursor/bdk serve --dir . --mode single --dev --port 3000 &
+          # Default multi mount (/<dirname>/v1/*) matches `bdk github replay` URL discovery.
+          npx @cursor/bdk serve --dir . --dev --port 3000 &
           echo $! > "$RUNNER_TEMP/bdk-serve.pid"
           for i in $(seq 1 45); do
-            curl -sf http://127.0.0.1:3000/v1/info >/dev/null && exit 0
+            curl -sf http://127.0.0.1:3000/code-review-bot/v1/info >/dev/null && exit 0
             sleep 2
           done
           exit 1
@@ -58,7 +59,6 @@ jobs:
           ACTION="${{ github.event.action }}"
           npx @cursor/bdk github replay "${REPO}#${PR}" \
             --dir . \
-            --url http://127.0.0.1:3000 \
             --events pull_request \
             --action "$ACTION"
           kill "$(cat "$RUNNER_TEMP/bdk-serve.pid")" 2>/dev/null || true

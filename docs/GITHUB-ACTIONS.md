@@ -31,6 +31,8 @@ Runs on **GitHub’s runners** when a PR opens or updates. Uses your **User API 
 |---------|-----|
 | Workflow skipped / no secret | Add `CURSOR_API_KEY` on the **app** repo (insightstack) |
 | Auth error in logs | Regenerate API key; check Integrations |
+| `replay` → `404 (rejected)` on `code-review-bot/github` | Do not use `serve --mode single` with default `github replay` (slug mismatch). Use default multi mount and probe `http://127.0.0.1:3000/code-review-bot/v1/info`, or pass `--url http://127.0.0.1:3000/v1/channels/github` if you keep `--mode single`. |
+| `replay` → `405` posting to `--url http://127.0.0.1:3000` | `--url` must be the full channel path (`…/v1/channels/github`), not the server root. Prefer omitting `--url` when serve and replay use the same mount mode. |
 | No review on PR | Check Actions tab logs; confirm `post_review_decision` in trace |
 | Permission denied posting review | Workflow needs `pull-requests: write` (already in YAML) |
 
