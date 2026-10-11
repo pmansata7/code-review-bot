@@ -58,7 +58,6 @@ jobs:
           ACTION="${{ github.event.action }}"
           npx @cursor/bdk github replay "${REPO}#${PR}" \
             --dir . \
-            --url http://127.0.0.1:3000 \
             --events pull_request \
             --action "$ACTION"
           kill "$(cat "$RUNNER_TEMP/bdk-serve.pid")" 2>/dev/null || true
