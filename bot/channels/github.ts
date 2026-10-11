@@ -8,7 +8,12 @@ import { buildPrWorkspaceFiles } from "../lib/pr-workspace.js";
 import { alreadyReviewedHead } from "../lib/review-dedupe.js";
 import { REPOS, watches } from "../lib/repos.js";
 
-const OPTIONAL_PR_ACTIONS = new Set(["opened", "reopened", "ready_for_review"]);
+const OPTIONAL_PR_ACTIONS = new Set([
+  "opened",
+  "reopened",
+  "ready_for_review",
+  "synchronize",
+]);
 const AGENTIC_LABEL = "agentic-test";
 const BOT_MENTION = /@code-review-bot\b/i;
 const SLASH_REVIEW = /(?:^|\s)\/review\b/i;
