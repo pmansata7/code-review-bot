@@ -69,16 +69,37 @@ npm run check
 
 You should see `ok: code-review-bot` with no errors.
 
-### 2.4 Get `CURSOR_SERVICE_ACCOUNT_KEY`
+### 2.4 Get an API key (most Pro accounts)
 
-This is a **team service account API key** for hosted BDK agents (not your personal Cursor password).
+On **API & SSH Keys** → **User API Keys** → **New API Key**. Copy once.
 
-1. In **https://cursor.com/dashboard**, open your **Team** (or org) settings.
-2. Look for **Service accounts**, **API keys**, **Agents**, or **BDK / Bot hosting** (product name may vary).
-3. **Create** a service account (e.g. name: `code-review-bot`).
-4. Copy the key once — store it in a password manager. It often starts with a long opaque string.
+- **Hosted `bdk deploy`** needs a **team service account** (`CURSOR_SERVICE_ACCOUNT_KEY`). That section only appears on some **Team** plans with agent hosting — if you don’t see it, use **Plan B** below.
 
-**If you cannot find it:** use Cursor **Help** or docs for “BDK deploy service account”. Alternative for local testing only: `npx @cursor/bdk login` (personal) — **deploy to hosting still needs the service account key** on most teams.
+**Plan A — hosted deploy** (when you have a service account):
+
+```bash
+export CURSOR_SERVICE_ACCOUNT_KEY="your-service-account-key"
+npx @cursor/bdk deploy --dir . --cursor-events-repo pmansata7/insightstack
+```
+
+**Plan B — no service account** (User API Key only):
+
+```bash
+export CURSOR_API_KEY="your-user-api-key"
+npx @cursor/bdk whoami --json
+```
+
+Keep your laptop online and run the bot locally (GitHub events via Cursor):
+
+```bash
+npx @cursor/bdk serve --dir . --cursor-events --repo pmansata7/insightstack
+```
+
+Or review **one PR at a time** (no always-on server):
+
+```bash
+npx @cursor/bdk github replay pmansata7/insightstack#PR_NUMBER --dir .
+```
 
 ### 2.5 Deploy (run in the same terminal)
 
