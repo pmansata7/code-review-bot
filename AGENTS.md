@@ -38,3 +38,8 @@ Run the CLI under Node, never Bun.
 - Skills: `node_modules/@cursor/bdk/skills/` (`create-agent`, `deploy`, `evals`, `hillclimb`, `debug`)
 - Docs: `npx @cursor/bdk docs`
 - LLM docs index: `node_modules/@cursor/bdk/dist/docs/llms.txt`
+
+## Cursor Cloud Agent auto-merge
+
+Pull requests on `cursor/*` branches squash-merge when checks pass. See `docs/cloud-agent-auto-merge.md`.
+
