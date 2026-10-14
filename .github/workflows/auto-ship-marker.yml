@@ -1,0 +1,124 @@
+# Cloud Agent PRs (head branch `cursor/*`) and PRs with `<!-- auto-ship -->` in the body
+# get label `auto-merge` and squash-merge when checks pass (same workflow run).
+# Bot-applied labels do not fire `pull_request: labeled`, so merge runs here instead
+# of relying on `.github/workflows/auto-merge.yml`.
+
+name: Auto-ship marker and merge
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+jobs:
+  add-auto-merge-label:
+    runs-on: ubuntu-latest
+    outputs:
+      merge_requested: ${{ steps.marker.outputs.merge_requested }}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Queue auto-merge for Cloud Agent PRs
+        id: marker
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          body="$(gh pr view "$PR" -R "$REPO" --json body -q .body)"
+          head_ref="$(gh pr view "$PR" -R "$REPO" --json headRefName -q .headRefName)"
+
+          wants_merge=false
+          if grep -qF '<!-- auto-ship -->' <<< "$body"; then
+            wants_merge=true
+            echo "Auto-merge: <!-- auto-ship --> marker present."
+          elif [[ "$head_ref" == cursor/* ]]; then
+            wants_merge=true
+            echo "Auto-merge: Cloud Agent branch (${head_ref})."
+          fi
+
+          if [ "$wants_merge" = "false" ]; then
+            echo "No auto-merge trigger (not cursor/* and no auto-ship marker); skipping."
+            echo "merge_requested=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "merge_requested=true" >> "$GITHUB_OUTPUT"
+
+          is_draft="$(gh pr view "$PR" -R "$REPO" --json isDraft -q .isDraft)"
+          if [ "$is_draft" = "true" ]; then
+            echo "PR is still a draft; will auto-merge after it is marked ready for review."
+            exit 0
+          fi
+
+          if gh pr view "$PR" -R "$REPO" --json labels -q '.labels[].name' | grep -qxF 'auto-merge'; then
+            echo "Label auto-merge already present; skipping add."
+            exit 0
+          fi
+
+          gh pr edit "$PR" -R "$REPO" --add-label auto-merge
+          echo "Added label auto-merge."
+
+  merge-when-ready:
+    needs: add-auto-merge-label
+    if: needs.add-auto-merge-label.outputs.merge_requested == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      statuses: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Merge when checks pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          is_draft="$(gh pr view "$PR" --json isDraft -q .isDraft)"
+          if [ "$is_draft" = "true" ]; then
+            echo "Still a draft; not merging yet."
+            exit 0
+          fi
+
+          echo "Auto-merge requested for PR #${PR}"
+
+          bash scripts/wait-for-external-pr-checks.sh "$PR"
+
+          decision="$(gh pr view "$PR" --json reviewDecision -q .reviewDecision)"
+          if [ "$decision" = "CHANGES_REQUESTED" ]; then
+            echo "A review requested changes; not merging."
+            exit 1
+          fi
+
+          mergeable="$(gh pr view "$PR" --json mergeable -q .mergeable)"
+          if [ "$mergeable" != "MERGEABLE" ]; then
+            echo "PR is not mergeable (mergeable=${mergeable})."
+            exit 1
+          fi
+
+          # External checks already validated; UNSTABLE is common while merge jobs run.
+          state="$(gh pr view "$PR" --json mergeStateStatus -q .mergeStateStatus)"
+          case "$state" in
+            CLEAN|HAS_HOOKS|UNSTABLE)
+              echo "mergeStateStatus=${state}; proceeding (mergeable=${mergeable})."
+              ;;
+            BEHIND|DIRTY|BLOCKED)
+              echo "mergeStateStatus=${state}; not merging."
+              exit 1
+              ;;
+            *)
+              echo "mergeStateStatus=${state}; not merging."
+              exit 1
+              ;;
+          esac
+
+          gh pr merge "$PR" --squash --delete-branch
+          echo "Merged PR #${PR} (squash)."
